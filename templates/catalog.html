@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html>
+	<head>
+        <link rel=stylesheet type=text/css href="{{ url_for('static', filename='styles.css') }}">
+        
+        <script>
+            function showWines(country) {
+                var htmlstring = "";
+                if (country == "All") {
+                    htmlstring += "<h3>Wines:</h3>";
+                    {% if loggedInUsername %}
+                        htmlstring += "<p><a href=\"/wine/new\">Add a new wine</a></p>";
+                    {% endif %}
+                    {% for wine in wines %}
+                            htmlstring += "<li>";
+                            {% if loggedInUsername %}
+                                htmlstring += " <a href=\"/wine/{{wine[0].id}}/edit\">Edit</a> ";
+                            {% endif %}
+                            htmlstring += "{{wine[1]}}, ";
+                            htmlstring += "<strong>{{wine[0].name}}</strong>, " +
+                            "{{wine[0].year}}, " +
+                            "${{wine[0].price}}, " +
+                            "Rating={{wine[0].rating}}" + " ";
+                            htmlstring += "<a href=\"#\" onclick=toggleDisplay(\"desc{{wine[0].id}}\")>Show/Hide Desc</a>";
+                            htmlstring += "<br>" +
+                            "<div style=\"display:none\" id=\"desc{{wine[0].id}}\">" +
+                            "{{wine[0].description}}" +
+                            "</div>";
+                            htmlstring += "</li>";
+                    {% endfor %}
+                } else {
+                    htmlstring = "<h3>Wines of " + country + "</h3>" + "<ul>";
+                    {% for wine in wines %}
+                        if ("{{wine[1]}}" == country) {
+                            htmlstring += "<li>";
+                            {% if loggedInUsername %}
+                                htmlstring += " <a href=\"/wine/{{wine[0].id}}/edit\">Edit</a> ";
+                            {% endif %}
+                            htmlstring += "<strong>{{wine[0].name}}</strong>, " +
+                            "{{wine[0].year}}, " +
+                            "${{wine[0].price}}, " +
+                            "Rating={{wine[0].rating}} ";
+                            htmlstring += "<a href=\"#\" onclick=toggleDisplay(\"desc{{wine[0].id}}\")>Show/Hide Desc</a>";
+                            htmlstring += "<br>" +
+                            "<div style=\"display:none\" id=\"desc{{wine[0].id}}\">" +
+                            "{{wine[0].description}}" +
+                            "</div>";
+                            htmlstring += "</li>";
+                        }; 
+                    {% endfor %}
+                    htmlstring += "</ul>";
+                    htmlstring += "<p><a href=\"/\">Show all wines.</a></p>";
+                };
+                winelist.innerHTML = htmlstring;
+            }
+
+            function toggleDisplay(id) {
+                var x = document.getElementById(id);
+                if (x.style.display === "none") {
+                    x.style.display = "block";
+                } else {
+                    x.style.display = "none";
+                };
+            }
+        </script>
+	</head>
+
+    <body>
+        <h1>The Wine App</h1>
+        {% if loggedInUsername %}
+            <p>Welcome {{loggedInUsername}}. <a href="/logout">Log out.</a></p>
+        {% else %}
+            <p><a href="/login">Log in.</a></p>
+        {% endif %}
+        <div class="row">
+            <div class="column left">
+                <h3>Countries:</h3>
+                {% if loggedInUsername %}
+                    <p><a href="/country/new">Add a new country</a></p>
+                {% endif %}
+                <ul>
+                    {% for country in countries %}
+		            <li><a href="#" onclick=showWines("{{country.name}}")>{{country.name}}</a></li>
+                    {% endfor %}
+                </ul>
+                <p>Click the country name to filter the list on the right.</p>
+            </div>
+            <div class="column right" id="winelist">
+                <script>showWines("All");</script>
+            </div>
+        </div>
+    </body>
+</html>

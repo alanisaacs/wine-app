@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html>
+    <body>
+        <p>Edit a wine:</p>
+            <form action="#" method = "post">
+                <label for="country_id">Country:</label>
+                <select name="country_id">
+                    {% if item.country_id == None %}
+                        <option value="None" selected>None</option>
+                    {% endif %}
+                    {% for country in countries %}
+                        {% if country.id == item.country_id %}
+                            <option value={{country.id}} selected>{{country.name}}</option>
+                        {% else %}
+                            <option value={{country.id}}>{{country.name}}</option>
+                        {% endif %}
+                    {% endfor %}
+                 </select>
+                <br>
+                <label for="name">Name:</label>
+                <input type="text" maxlength="100" name="name" value={{item.name}}>
+                <br>
+                <label for="year">Year:</label>
+                <input type="text" maxlength="100" name="year" value={{item.year}}>
+                <br>
+                <label for="price">Price:</label>
+                <input type="text" maxlength="100" name="price" value={{item.price}}>
+                <br>
+                <label for="rating">Rating:</label>
+                <input type="text" maxlength="100" name="rating" value={{item.rating}}>
+                <br>
+                <label for="description">Description:</label>
+                <textarea maxlength="1000" name="description" 
+                     cols="50" rows="6">{{item.description}}</textarea>
+                <br>
+                <button type="submit" id="submit" type="submit">
+                Update
+                </button>
+            </form>
+            <p><a href="/wine/{{wine_id}}/delete/">Delete this item</a></p>
+            <p><a href="/">Back to catalog</a></p>
+    </body>
+</html>

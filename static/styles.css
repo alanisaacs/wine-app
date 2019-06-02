@@ -1,0 +1,25 @@
+* {
+    box-sizing: border-box;
+  }
+  
+/* Create two unequal columns that float next to each other */
+.column {
+  float: left;
+  padding: 10px;
+}
+
+/* This is not working currently */
+.left {
+  width: 25%;
+}
+
+.right {
+  width: 75%;
+}
+  
+/* Clear floats after the columns */
+  .row:after {
+    content: "";
+    display: table;
+    clear: both;
+  }

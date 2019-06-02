@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html>
+    <body>
+        <p>Create a new wine:</p>
+            <form action="#" method = "post">
+                <label for="country_id">Country:</label>
+                <select name="country_id">
+                    {% for country in countries %}
+                        <option value={{country.id}}>{{country.name}}</option>
+                    {% endfor %}
+                </select>
+                <br>
+                <label for="name">Name:</label>
+                <input type="text" maxlength="100" name="name">
+                <br>
+                <label for="year">Year:</label>
+                <input type="text" maxlength="100" name="year">
+                <br>
+                <label for="price">Price:</label>
+                <input type="text" maxlength="100" name="price">
+                <br>
+                <label for="rating">Rating:</label>
+                <input type="text" maxlength="100" name="rating">
+                <br>
+                <label for="year">Description:</label>
+                <input type="text" maxlength="1000" name="description">
+                <br>
+                <button type="submit" class="btn btn-default" id="submit" type="submit">
+                Create
+                </button>
+            </form>
+    </body>
+</html>
