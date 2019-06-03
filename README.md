@@ -34,6 +34,20 @@ VirtualBox and Vagrant. Here's how to set them up.
 A working database with content, wines.db, is included in the project package. If you want to create a fresh database, run the models.py file in Python 2.7:
 `$ python models.py`
 
+## Add private keys for logging in
+
+To log into the application you will need to provide the server with private api keys in the top level of the project folder:
+* Put Google api keys in a json file called "client_secrets.json". For formatting, see [developers.google.com](https://developers.google.com/api-client-library/python/guide/aaa_client_secrets).
+* Put Facebook api keys in a json file called "fb_client_secrets.json". Use this formatting for the file:
+```
+{
+    "web": {
+      "app_id": "CODE",
+      "app_secret": "CODE"
+    }
+  }
+```
+
 ## Run the program
 
 To run the program, cd to the project folder and run views.py with Python 2.7:
@@ -41,6 +55,10 @@ To run the program, cd to the project folder and run views.py with Python 2.7:
 Navigate your browser to `localhost:5000` to view the application.
 
 Note that you will have to log in with either Google or Facebook in order to see links that will enable you to update the database, e.g. to create, edit, or delete a wine entry.
+
+## JSON Endpoint
+
+A JSON version of the wine catalog can be obtained at /catalog/json.
 
 ## Dependencies
 
