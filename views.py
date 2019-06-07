@@ -70,9 +70,9 @@ def fbconnect():
     result = h.request(url, 'GET')[1]
     data = json.loads(result)
     login_session['provider'] = 'facebook'
-    login_session['username'] = data["name"]
-    login_session['email'] = data["email"]
-    login_session['facebook_id'] = data["id"]
+    login_session['username'] = data.get('name', '')
+    login_session['email'] = data.get('email', '')
+    login_session['facebook_id'] = data.get('id', '')
 
     # The token must be stored in the login_session in order to logout
     login_session['access_token'] = token
@@ -164,9 +164,9 @@ def gconnect():
     params = {'access_token': credentials.access_token, 'alt': 'json'}
     answer = requests.get(userinfo_url, params=params)
     data = json.loads(answer.text)
-    login_session['username'] = data["name"]
-    login_session['picture'] = data["picture"]
-    login_session['email'] = data["email"]
+    login_session['username'] = data.get('name', '')
+    login_session['picture'] = data.get('picture', '')
+    login_session['email'] = data.get('email', '')
     # Check to see if the user is in the db; if not, create a new user
     user_id = getUserID(login_session['email'])
     # if not user_id:
@@ -372,7 +372,7 @@ def wineJSON(wine_id):
     session = DBSession()
     wine = session.query(Wine).filter_by(id=wine_id).one()
     session.close()
-    x =  '{ "name":"%s", "description":"%s", "price":"$%s", "year":%s, "rating":%s}' % (
+    x = '{ "name":"%s", "description":"%s", "price":"$%s", "year":%s, "rating":%s}' % (
         wine.name, wine.description, wine.price, wine.year, wine.rating)
     y = json.loads(x)
     return jsonify(y)
