@@ -2,17 +2,27 @@
 
 """Create web views for the Wine App"""
 
-from flask import Flask, render_template, request, redirect, jsonify, url_for
-from sqlalchemy import create_engine, asc
+from flask import (Flask, 
+                  render_template, 
+                  request, 
+                  redirect, 
+                  jsonify, 
+                  url_for,
+                  make_response,
+                  session as login_session)
+from sqlalchemy import (create_engine, 
+                       asc)
 from sqlalchemy.orm import sessionmaker
-from models import Base, Country, Wine, User
-from flask import session as login_session
-import random, string
-from oauth2client.client import flow_from_clientsecrets
-from oauth2client.client import FlowExchangeError
+from models import (Base, 
+                    Country, 
+                    Wine, 
+                    User)
+import random
+import string
+from oauth2client.client import (flow_from_clientsecrets,
+                                FlowExchangeError)
 import httplib2
 import json
-from flask import make_response
 import requests
 
 GOOGLE_CLIENT_ID = json.loads(open(
@@ -21,10 +31,10 @@ GOOGLE_CLIENT_ID = json.loads(open(
 app = Flask(__name__)
 
 # Connect to Database and create database session
-engine = create_engine('sqlite:///wines.db')
+engine = create_engine(
+    'sqlite:///wines.db', connect_args={'check_same_thread':False})
 Base.metadata.bind = engine
 DBSession = sessionmaker(bind=engine)
-session = DBSession()
 
 
 @app.route('/login')
@@ -219,7 +229,9 @@ def getUserID(email):
     """Get user ID from email"""
     try:
         user_email = login_session['email']
+        session = DBSession()
         user = session.query(User).filter_by(email=user_email).one()
+        session.close()
         return user.id
     except:
         return None
@@ -227,7 +239,9 @@ def getUserID(email):
 
 def getUserInfo(user_id):
     """Get user information by ID"""
+    session = DBSession()
     user = session.query(User).filter_by(id=user_id).one()
+    session.close()
     return user
 
 
@@ -237,9 +251,11 @@ def createUser(login_session):
         name=login_session['username'],
         email=login_session['email'],
         picture=login_session['picture'])
+    session = DBSession()
     session.add(newUser)
     session.commit()
     user = session.query(User).filter_by(email=login_session['email']).one()
+    session.close()
     return user.id
 
 
@@ -247,8 +263,10 @@ def createUser(login_session):
 @app.route('/catalog/')
 def showCatalog():
     """Show catalog"""
+    session = DBSession()
     countries = session.query(Country).order_by(asc(Country.name))
     wines = session.query(Wine, Country.name).join(Country)
+    session.close()
     if 'username' not in login_session:
         loggedInUsername = False
     else:
@@ -263,8 +281,10 @@ def newCountry():
     """Create a new country"""
     if request.method == 'POST':
         newCountry = Country(name=request.form['name'])
+        session = DBSession()
         session.add(newCountry)
         session.commit()
+        session.close()
         return redirect(url_for('showCatalog'))
     else:
         return render_template('newCountry.html')
@@ -273,6 +293,7 @@ def newCountry():
 @app.route('/wine/new/', methods=['GET', 'POST'])
 def newWine():
     """Create a new wine"""
+    session = DBSession()
     countries = session.query(Country).order_by(asc(Country.name))
     if request.method == 'POST':
         newWine = Wine(
@@ -285,14 +306,17 @@ def newWine():
             )
         session.add(newWine)
         session.commit()
+        session.close()
         return redirect(url_for('showCatalog'))
     else:
+        session.close()
         return render_template('newWine.html', countries=countries)
 
 
 @app.route('/wine/<int:wine_id>/edit/', methods=['GET', 'POST'])
 def editWine(wine_id):
     """Edit a wine"""
+    session = DBSession()
     wineToEdit = session.query(Wine).filter_by(id=wine_id).one()
     countries = session.query(Country).order_by(asc(Country.name))
     if request.method == 'POST':
@@ -310,8 +334,10 @@ def editWine(wine_id):
             wineToEdit.description = request.form['description']
         session.add(wineToEdit)
         session.commit()
+        session.close()
         return redirect(url_for('showCatalog'))
     else:
+        session.close()
         return render_template('editWine.html',
                                wine_id=wine_id, item=wineToEdit,
                                countries=countries)
@@ -320,19 +346,24 @@ def editWine(wine_id):
 @app.route('/wine/<int:wine_id>/delete/', methods=['GET', 'POST'])
 def deleteWine(wine_id):
     """Delete a wine"""
+    session = DBSession()
     wineToDelete = session.query(Wine).filter_by(id=wine_id).one()
     if request.method == 'POST':
         session.delete(wineToDelete)
         session.commit()
+        session.close()
         return redirect(url_for('showCatalog'))
     else:
+        session.close()
         return render_template('deleteWine.html', item=wineToDelete)
 
 
 @app.route('/catalog/json')
 def catalogJSON():
     """Generate a JSON version of the catalog"""
+    session = DBSession()
     catalog = session.query(Wine).all()
+    session.close()
     return jsonify(wines=[wine.serialize for wine in catalog])
 
 
