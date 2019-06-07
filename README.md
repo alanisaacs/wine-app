@@ -71,7 +71,6 @@ A number of third-party modules were used to create the application:
 ## Known Issues
 
 * Signing in with Google shows the Google account selector twice
-* The Google account selector references "Restaurant Menu App" instead of the Wine App
 * The Facebook log in screen references "Alan's first app" instead of the Wine App
 * Currently the logout process requires the user to click a second "Complete the sign out process" link after choosing to logout.
 

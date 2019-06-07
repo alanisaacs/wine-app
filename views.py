@@ -2,25 +2,25 @@
 
 """Create web views for the Wine App"""
 
-from flask import (Flask, 
-                  render_template, 
-                  request, 
-                  redirect, 
-                  jsonify, 
-                  url_for,
-                  make_response,
-                  session as login_session)
-from sqlalchemy import (create_engine, 
-                       asc)
+from flask import (Flask,
+                   render_template,
+                   request,
+                   redirect,
+                   jsonify,
+                   url_for,
+                   make_response,
+                   session as login_session)
+from sqlalchemy import (create_engine,
+                        asc)
 from sqlalchemy.orm import sessionmaker
-from models import (Base, 
-                    Country, 
-                    Wine, 
+from models import (Base,
+                    Country,
+                    Wine,
                     User)
 import random
 import string
 from oauth2client.client import (flow_from_clientsecrets,
-                                FlowExchangeError)
+                                 FlowExchangeError)
 import httplib2
 import json
 import requests
@@ -32,7 +32,7 @@ app = Flask(__name__)
 
 # Connect to Database and create database session
 engine = create_engine(
-    'sqlite:///wines.db', connect_args={'check_same_thread':False})
+    'sqlite:///wines.db', connect_args={'check_same_thread': False})
 Base.metadata.bind = engine
 DBSession = sessionmaker(bind=engine)
 
@@ -59,13 +59,13 @@ def fbconnect():
         'web']['app_id']
     app_secret = json.loads(
         open('fb_client_secrets.json', 'r').read())['web']['app_secret']
-    url = 'https://graph.facebook.com/oauth/access_token?grant_type=fb_exchange_token&client_id=%s&client_secret=%s&fb_exchange_token=%s' % (app_id, app_secret, access_token)
+    url = 'https://graph.facebook.com/oauth/access_token?grant_type=fb_exchange_token&client_id=%s&client_secret=%s&fb_exchange_token=%s' % (app_id, app_secret, access_token)  # noqa
     h = httplib2.Http()
     result = h.request(url, 'GET')[1]
     # Use token to get user info from API
     userinfo_url = "https://graph.facebook.com/v2.8/me"
     token = result.split(',')[0].split(':')[1].replace('"', '')
-    url = 'https://graph.facebook.com/v2.8/me?access_token=%s&fields=name,id,email' % token
+    url = 'https://graph.facebook.com/v2.8/me?access_token=%s&fields=name,id,email' % token  # noqa
     h = httplib2.Http()
     result = h.request(url, 'GET')[1]
     data = json.loads(result)
@@ -78,7 +78,7 @@ def fbconnect():
     login_session['access_token'] = token
 
     # Get user picture
-    url = 'https://graph.facebook.com/v2.8/me/picture?access_token=%s&redirect=0&height=200&width=200' % token
+    url = 'https://graph.facebook.com/v2.8/me/picture?access_token=%s&redirect=0&height=200&width=200' % token  # noqa
     h = httplib2.Http()
     result = h.request(url, 'GET')[1]
     data = json.loads(result)
@@ -100,8 +100,7 @@ def fbdisconnect():
     facebook_id = login_session['facebook_id']
     # The access token must me included to successfully logout
     access_token = login_session['access_token']
-    url = 'https://graph.facebook.com/%s/permissions?access_token=%s' % (
-        facebook_id, access_token)
+    url = 'https://graph.facebook.com/%s/permissions?access_token=%s' % (facebook_id, access_token)  # noqa
     h = httplib2.Http()
     result = h.request(url, 'DELETE')[1]
     return "you have been logged out"
@@ -130,7 +129,7 @@ def gconnect():
     # Check that the access token is valid
     access_token = credentials.access_token
     login_session['access_token'] = access_token
-    url = ('https://www.googleapis.com/oauth2/v1/tokeninfo?access_token=%s' % access_token)
+    url = ('https://www.googleapis.com/oauth2/v1/tokeninfo?access_token=%s' % access_token)  # noqa
     h = httplib2.Http()
     result = json.loads(h.request(url, 'GET')[1])
     # If there was an error in the access token info, abort
@@ -186,7 +185,7 @@ def gdisconnect():
             'Current user not connected.'), 401)
         response.headers['Content-Type'] = 'application/json'
         return response
-    url = 'https://accounts.google.com/o/oauth2/revoke?token=%s' % login_session['access_token']
+    url = 'https://accounts.google.com/o/oauth2/revoke?token=%s' % login_session['access_token']  # noqa
     h = httplib2.Http()
     result = h.request(url, 'GET')[0]
     if result['status'] == '200':
@@ -233,7 +232,7 @@ def getUserID(email):
         user = session.query(User).filter_by(email=user_email).one()
         session.close()
         return user.id
-    except:
+    except:  # noqa
         return None
 
 
@@ -365,6 +364,18 @@ def catalogJSON():
     catalog = session.query(Wine).all()
     session.close()
     return jsonify(wines=[wine.serialize for wine in catalog])
+
+
+@app.route('/wine/<int:wine_id>/json')
+def wineJSON(wine_id):
+    """Generate a JSON version of the wine requested"""
+    session = DBSession()
+    wine = session.query(Wine).filter_by(id=wine_id).one()
+    session.close()
+    x =  '{ "name":"%s", "description":"%s", "price":"$%s", "year":%s, "rating":%s}' % (
+        wine.name, wine.description, wine.price, wine.year, wine.rating)
+    y = json.loads(x)
+    return jsonify(y)
 
 
 if __name__ == '__main__':
