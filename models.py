@@ -45,7 +45,7 @@ class Wine(Base):
     country_id = Column(Integer, ForeignKey('country.id'))
     country = relationship(Country)
     user_id = Column(Integer, ForeignKey('user.id'))
-    country = relationship(User)
+    user = relationship(User)
 
     @property
     def serialize(self):

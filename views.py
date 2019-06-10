@@ -61,8 +61,8 @@ def fbconnect():
         open('fb_client_secrets.json', 'r').read())['web']['app_secret']
     url = 'https://graph.facebook.com/oauth/access_token?'
     url += 'grant_type=fb_exchange_token&client_id=%s'
-    url += '&client_secret=%s&fb_exchange_token=%s' 
-    realurl = url % (app_id, app_secret, access_token) 
+    url += '&client_secret=%s&fb_exchange_token=%s'
+    realurl = url % (app_id, app_secret, access_token)
     h = httplib2.Http()
     result = h.request(realurl, 'GET')[1]
     # Use token to get user info from API
@@ -85,7 +85,7 @@ def fbconnect():
     # Get user picture
     url = 'https://graph.facebook.com/v2.8/me/picture?access_token=%s'
     url += '&redirect=0&height=200&width=200'
-    realurl = url % token  
+    realurl = url % token
     h = httplib2.Http()
     result = h.request(realurl, 'GET')[1]
     data = json.loads(result)
@@ -108,7 +108,7 @@ def fbdisconnect():
     # The access token must me included to successfully logout
     access_token = login_session['access_token']
     url = 'https://graph.facebook.com/%s/permissions?'
-    url += 'access_token=%s' 
+    url += 'access_token=%s'
     realurl = url % (facebook_id, access_token)
     h = httplib2.Http()
     result = h.request(url, 'DELETE')[1]
@@ -292,6 +292,8 @@ def showCatalog():
 @app.route('/country/new/', methods=['GET', 'POST'])
 def newCountry():
     """Create a new country"""
+    # The user must be logged in to create a country
+    # but the user_id is not stored like it is for a wine
     if 'username' not in login_session:
         return redirect(url_for('showLogin'))
     if request.method == 'POST':
@@ -410,10 +412,7 @@ def wineJSON(wine_id):
     wine = session.query(Wine).filter_by(id=wine_id).one_or_none()
     session.close()
     if wine:
-        wobj = '{ "name":"%s", "description":"%s", "price":"$%s", "year":%s, "rating":%s, "country_id":%s }' % (  # no qa
-            wine.name, wine.description, wine.price, wine.year, wine.rating, wine.country_id)
-        wjson = json.loads(wobj)
-        return jsonify(wjson)
+        return jsonify(wine=[wine.serialize])
     else:
         return 'No wine with that id'
 
