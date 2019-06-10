@@ -9,6 +9,7 @@ Base = declarative_base()
 
 
 class User(Base):
+    """Registered user information"""
     __tablename__ = 'user'
 
     id = Column(Integer, primary_key=True)
@@ -18,6 +19,7 @@ class User(Base):
 
 
 class Country(Base):
+    """Each wine is associated with a country"""
     __tablename__ = 'country'
     id = Column(Integer, primary_key=True)
     name = Column(String(250), nullable=False)
@@ -32,6 +34,7 @@ class Country(Base):
 
 
 class Wine(Base):
+    """Data for each wine"""
     __tablename__ = 'wine'
     name = Column(String(80), nullable=False)
     id = Column(Integer, primary_key=True)
@@ -41,6 +44,8 @@ class Wine(Base):
     year = Column(Integer)
     country_id = Column(Integer, ForeignKey('country.id'))
     country = relationship(Country)
+    user_id = Column(Integer, ForeignKey('user.id'))
+    country = relationship(User)
 
     @property
     def serialize(self):
@@ -51,7 +56,8 @@ class Wine(Base):
             'id': self.id,
             'price': self.price,
             'rating': self.rating,
-            'year': self.year
+            'year': self.year,
+            'country_id': self.country_id
             }
 
 

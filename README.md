@@ -56,9 +56,12 @@ Navigate your browser to `localhost:5000` to view the application.
 
 Note that you will have to log in with either Google or Facebook in order to see links that will enable you to update the database, e.g. to create, edit, or delete a wine entry.
 
-## JSON Endpoint
+## JSON Endpoints
 
-A JSON version of the wine catalog can be obtained at /catalog/json.
+JSON versions are available as follows:
+* Wine catalog: /catalog/json
+* Country list: /countries/json
+* Single wine by id: /wine/ID/json
 
 ## Dependencies
 

@@ -59,15 +59,20 @@ def fbconnect():
         'web']['app_id']
     app_secret = json.loads(
         open('fb_client_secrets.json', 'r').read())['web']['app_secret']
-    url = 'https://graph.facebook.com/oauth/access_token?grant_type=fb_exchange_token&client_id=%s&client_secret=%s&fb_exchange_token=%s' % (app_id, app_secret, access_token)  # noqa
+    url = 'https://graph.facebook.com/oauth/access_token?'
+    url += 'grant_type=fb_exchange_token&client_id=%s'
+    url += '&client_secret=%s&fb_exchange_token=%s' 
+    realurl = url % (app_id, app_secret, access_token) 
     h = httplib2.Http()
-    result = h.request(url, 'GET')[1]
+    result = h.request(realurl, 'GET')[1]
     # Use token to get user info from API
     userinfo_url = "https://graph.facebook.com/v2.8/me"
     token = result.split(',')[0].split(':')[1].replace('"', '')
-    url = 'https://graph.facebook.com/v2.8/me?access_token=%s&fields=name,id,email' % token  # noqa
+    url = 'https://graph.facebook.com/v2.8/me?access_token=%s'
+    url += '&fields=name,id,email'
+    realurl = url % token
     h = httplib2.Http()
-    result = h.request(url, 'GET')[1]
+    result = h.request(realurl, 'GET')[1]
     data = json.loads(result)
     login_session['provider'] = 'facebook'
     login_session['username'] = data.get('name', '')
@@ -78,13 +83,15 @@ def fbconnect():
     login_session['access_token'] = token
 
     # Get user picture
-    url = 'https://graph.facebook.com/v2.8/me/picture?access_token=%s&redirect=0&height=200&width=200' % token  # noqa
+    url = 'https://graph.facebook.com/v2.8/me/picture?access_token=%s'
+    url += '&redirect=0&height=200&width=200'
+    realurl = url % token  
     h = httplib2.Http()
-    result = h.request(url, 'GET')[1]
+    result = h.request(realurl, 'GET')[1]
     data = json.loads(result)
     login_session['picture'] = data["data"]["url"]
 
-    # See if user exists
+    # See if user exists in wine.db
     user_id = getUserID(login_session['email'])
     if not user_id:
         user_id = createUser(login_session)
@@ -100,7 +107,9 @@ def fbdisconnect():
     facebook_id = login_session['facebook_id']
     # The access token must me included to successfully logout
     access_token = login_session['access_token']
-    url = 'https://graph.facebook.com/%s/permissions?access_token=%s' % (facebook_id, access_token)  # noqa
+    url = 'https://graph.facebook.com/%s/permissions?'
+    url += 'access_token=%s' 
+    realurl = url % (facebook_id, access_token)
     h = httplib2.Http()
     result = h.request(url, 'DELETE')[1]
     return "you have been logged out"
@@ -129,9 +138,11 @@ def gconnect():
     # Check that the access token is valid
     access_token = credentials.access_token
     login_session['access_token'] = access_token
-    url = ('https://www.googleapis.com/oauth2/v1/tokeninfo?access_token=%s' % access_token)  # noqa
+    url = 'https://www.googleapis.com/oauth2/v1/tokeninfo?'
+    url += 'access_token=%s'
+    realurl = url % access_token
     h = httplib2.Http()
-    result = json.loads(h.request(url, 'GET')[1])
+    result = json.loads(h.request(realurl, 'GET')[1])
     # If there was an error in the access token info, abort
     if result.get('error') is not None:
         print 'USER ID MISMATCH'
@@ -167,10 +178,10 @@ def gconnect():
     login_session['username'] = data.get('name', '')
     login_session['picture'] = data.get('picture', '')
     login_session['email'] = data.get('email', '')
-    # Check to see if the user is in the db; if not, create a new user
+    # See if user exists in wine.db
     user_id = getUserID(login_session['email'])
-    # if not user_id:
-    # createUser(login_session)
+    if not user_id:
+        user_id = createUser(login_session)
     login_session['user_id'] = user_id
     return render_template('loginsuccess.html', ls=login_session)
 
@@ -185,9 +196,11 @@ def gdisconnect():
             'Current user not connected.'), 401)
         response.headers['Content-Type'] = 'application/json'
         return response
-    url = 'https://accounts.google.com/o/oauth2/revoke?token=%s' % login_session['access_token']  # noqa
+    url = 'https://accounts.google.com/o/oauth2/revoke?'
+    url += 'token=%s'
+    realurl = url % login_session['access_token']
     h = httplib2.Http()
-    result = h.request(url, 'GET')[0]
+    result = h.request(realurl, 'GET')[0]
     if result['status'] == '200':
         response = make_response(json.dumps(
             'Successfully disconnected.'), 200)
@@ -229,7 +242,7 @@ def getUserID(email):
     try:
         user_email = login_session['email']
         session = DBSession()
-        user = session.query(User).filter_by(email=user_email).one()
+        user = session.query(User).filter_by(email=user_email).one_or_none()
         session.close()
         return user.id
     except:  # noqa
@@ -239,21 +252,22 @@ def getUserID(email):
 def getUserInfo(user_id):
     """Get user information by ID"""
     session = DBSession()
-    user = session.query(User).filter_by(id=user_id).one()
+    user = session.query(User).filter_by(id=user_id).one_or_none()
     session.close()
     return user
 
 
 def createUser(login_session):
     """Create a new user"""
+    session = DBSession()
     newUser = User(
         name=login_session['username'],
         email=login_session['email'],
         picture=login_session['picture'])
-    session = DBSession()
     session.add(newUser)
     session.commit()
-    user = session.query(User).filter_by(email=login_session['email']).one()
+    user = session.query(User).filter_by(
+        email=login_session['email']).one_or_none()
     session.close()
     return user.id
 
@@ -278,6 +292,8 @@ def showCatalog():
 @app.route('/country/new/', methods=['GET', 'POST'])
 def newCountry():
     """Create a new country"""
+    if 'username' not in login_session:
+        return redirect(url_for('showLogin'))
     if request.method == 'POST':
         newCountry = Country(name=request.form['name'])
         session = DBSession()
@@ -292,8 +308,11 @@ def newCountry():
 @app.route('/wine/new/', methods=['GET', 'POST'])
 def newWine():
     """Create a new wine"""
+    if 'username' not in login_session:
+        return redirect(url_for('showLogin'))
     session = DBSession()
     countries = session.query(Country).order_by(asc(Country.name))
+    login_user_id = login_session['user_id']
     if request.method == 'POST':
         newWine = Wine(
             country_id=request.form['country_id'],
@@ -301,7 +320,8 @@ def newWine():
             year=request.form['year'],
             price=request.form['price'],
             rating=request.form['rating'],
-            description=request.form['description']
+            description=request.form['description'],
+            user_id=login_user_id
             )
         session.add(newWine)
         session.commit()
@@ -315,8 +335,12 @@ def newWine():
 @app.route('/wine/<int:wine_id>/edit/', methods=['GET', 'POST'])
 def editWine(wine_id):
     """Edit a wine"""
+    if 'username' not in login_session:
+        return redirect(url_for('showLogin'))
     session = DBSession()
-    wineToEdit = session.query(Wine).filter_by(id=wine_id).one()
+    wineToEdit = session.query(Wine).filter_by(id=wine_id).one_or_none()
+    if wineToEdit.user_id != login_session['user_id']:
+        return render_template('unauthorized.html')
     countries = session.query(Country).order_by(asc(Country.name))
     if request.method == 'POST':
         if request.form['country_id']:
@@ -345,8 +369,12 @@ def editWine(wine_id):
 @app.route('/wine/<int:wine_id>/delete/', methods=['GET', 'POST'])
 def deleteWine(wine_id):
     """Delete a wine"""
+    if 'username' not in login_session:
+        return redirect(url_for('showLogin'))
     session = DBSession()
-    wineToDelete = session.query(Wine).filter_by(id=wine_id).one()
+    wineToDelete = session.query(Wine).filter_by(id=wine_id).one_or_none()
+    if wineToDelete.user_id != login_session['user_id']:
+        return render_template('unauthorized.html')
     if request.method == 'POST':
         session.delete(wineToDelete)
         session.commit()
@@ -366,16 +394,28 @@ def catalogJSON():
     return jsonify(wines=[wine.serialize for wine in catalog])
 
 
+@app.route('/countries/json')
+def countriesJSON():
+    """Generate a JSON version of the country list"""
+    session = DBSession()
+    countries = session.query(Country).all()
+    session.close()
+    return jsonify(countries=[country.serialize for country in countries])
+
+
 @app.route('/wine/<int:wine_id>/json')
 def wineJSON(wine_id):
     """Generate a JSON version of the wine requested"""
     session = DBSession()
-    wine = session.query(Wine).filter_by(id=wine_id).one()
+    wine = session.query(Wine).filter_by(id=wine_id).one_or_none()
     session.close()
-    x = '{ "name":"%s", "description":"%s", "price":"$%s", "year":%s, "rating":%s}' % (
-        wine.name, wine.description, wine.price, wine.year, wine.rating)
-    y = json.loads(x)
-    return jsonify(y)
+    if wine:
+        wobj = '{ "name":"%s", "description":"%s", "price":"$%s", "year":%s, "rating":%s, "country_id":%s }' % (  # no qa
+            wine.name, wine.description, wine.price, wine.year, wine.rating, wine.country_id)
+        wjson = json.loads(wobj)
+        return jsonify(wjson)
+    else:
+        return 'No wine with that id'
 
 
 if __name__ == '__main__':
