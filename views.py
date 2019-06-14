@@ -24,6 +24,7 @@ from oauth2client.client import (flow_from_clientsecrets,
 import httplib2
 import json
 import requests
+from functools import wraps
 
 GOOGLE_CLIENT_ID = json.loads(open(
     'client_secrets.json', 'r').read())['web']['client_id']
@@ -289,13 +290,22 @@ def showCatalog():
                            loggedInUsername=loggedInUsername)
 
 
+def login_required(f):
+    @wraps(f)
+    def decorated_function(*args, **kwargs):
+        if 'username' in login_session:
+            return f(*args, **kwargs)
+        else:
+            return redirect(url_for('showLogin'))
+    return decorated_function
+
+
 @app.route('/country/new/', methods=['GET', 'POST'])
+@login_required
 def newCountry():
     """Create a new country"""
     # The user must be logged in to create a country
     # but the user_id is not stored like it is for a wine
-    if 'username' not in login_session:
-        return redirect(url_for('showLogin'))
     if request.method == 'POST':
         newCountry = Country(name=request.form['name'])
         session = DBSession()
@@ -308,10 +318,9 @@ def newCountry():
 
 
 @app.route('/wine/new/', methods=['GET', 'POST'])
+@login_required
 def newWine():
     """Create a new wine"""
-    if 'username' not in login_session:
-        return redirect(url_for('showLogin'))
     session = DBSession()
     countries = session.query(Country).order_by(asc(Country.name))
     login_user_id = login_session['user_id']
@@ -335,10 +344,9 @@ def newWine():
 
 
 @app.route('/wine/<int:wine_id>/edit/', methods=['GET', 'POST'])
+@login_required
 def editWine(wine_id):
     """Edit a wine"""
-    if 'username' not in login_session:
-        return redirect(url_for('showLogin'))
     session = DBSession()
     wineToEdit = session.query(Wine).filter_by(id=wine_id).one_or_none()
     if wineToEdit.user_id != login_session['user_id']:
@@ -369,10 +377,9 @@ def editWine(wine_id):
 
 
 @app.route('/wine/<int:wine_id>/delete/', methods=['GET', 'POST'])
+@login_required
 def deleteWine(wine_id):
     """Delete a wine"""
-    if 'username' not in login_session:
-        return redirect(url_for('showLogin'))
     session = DBSession()
     wineToDelete = session.query(Wine).filter_by(id=wine_id).one_or_none()
     if wineToDelete.user_id != login_session['user_id']:
