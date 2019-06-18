@@ -1,4 +1,4 @@
-#!/usr/bin/env python2.7
+#!/usr/bin/env python3
 
 """Create web views for the Wine App"""
 
@@ -42,7 +42,7 @@ DBSession = sessionmaker(bind=engine)
 def showLogin():
     """At login, create a state token to prevent request forgery"""
     state = ''.join(random.choice(string.ascii_uppercase +
-                    string.digits) for x in xrange(32))
+                    string.digits) for x in range(32))
     login_session['state'] = state
     return render_template(
         'login.html', state=state, GOOGLE_CLIENT_ID=GOOGLE_CLIENT_ID)
@@ -55,7 +55,7 @@ def fbconnect():
         response = make_response(json.dumps('Invalid state parameter.'), 401)
         response.headers['Content-Type'] = 'application/json'
         return response
-    access_token = request.data
+    access_token = (request.data).decode()
     app_id = json.loads(open('fb_client_secrets.json', 'r').read())[
         'web']['app_id']
     app_secret = json.loads(
@@ -65,7 +65,7 @@ def fbconnect():
     url += '&client_secret=%s&fb_exchange_token=%s'
     realurl = url % (app_id, app_secret, access_token)
     h = httplib2.Http()
-    result = h.request(realurl, 'GET')[1]
+    result = (h.request(realurl, 'GET')[1]).decode()
     # Use token to get user info from API
     userinfo_url = "https://graph.facebook.com/v2.8/me"
     token = result.split(',')[0].split(':')[1].replace('"', '')
@@ -73,7 +73,7 @@ def fbconnect():
     url += '&fields=name,id,email'
     realurl = url % token
     h = httplib2.Http()
-    result = h.request(realurl, 'GET')[1]
+    result = (h.request(realurl, 'GET')[1]).decode()
     data = json.loads(result)
     login_session['provider'] = 'facebook'
     login_session['username'] = data.get('name', '')
@@ -88,7 +88,7 @@ def fbconnect():
     url += '&redirect=0&height=200&width=200'
     realurl = url % token
     h = httplib2.Http()
-    result = h.request(realurl, 'GET')[1]
+    result = (h.request(realurl, 'GET')[1]).decode()
     data = json.loads(result)
     login_session['picture'] = data["data"]["url"]
 
@@ -106,7 +106,7 @@ def fbconnect():
 def fbdisconnect():
     """Log out specific to Facebook"""
     facebook_id = login_session['facebook_id']
-    # The access token must me included to successfully logout
+    # The access token must be included to successfully logout
     access_token = login_session['access_token']
     url = 'https://graph.facebook.com/%s/permissions?'
     url += 'access_token=%s'
@@ -120,7 +120,6 @@ def fbdisconnect():
 def gconnect():
     """Log in with Google"""
     if request.args.get('state') != login_session['state']:
-        print 'INVALID STATE'
         response = make_response(json.dumps('Invalid state parameter'), 401)
         response.headers['Content-Type'] = 'application/json'
         return response
@@ -131,7 +130,6 @@ def gconnect():
         oauth_flow.redirect_uri = 'postmessage'
         credentials = oauth_flow.step2_exchange(code)
     except FlowExchangeError:
-        print 'FAILED TO UPGRADE'
         response = make_response(json.dumps(
             'Failed to upgrade the authorization code'), 401)
         response.headers['Content-Type'] = 'application/json'
@@ -143,17 +141,15 @@ def gconnect():
     url += 'access_token=%s'
     realurl = url % access_token
     h = httplib2.Http()
-    result = json.loads(h.request(realurl, 'GET')[1])
+    result = json.loads((h.request(realurl, 'GET')[1]).decode())
     # If there was an error in the access token info, abort
     if result.get('error') is not None:
-        print 'USER ID MISMATCH'
         response = make_response(json.dumps(
             "Token's user ID doesn't match given user id"), 401)
         response.headers['Content-Type'] = 'application.json'
         return response
     # Verify that the access token is valid for this app
     if result['issued_to'] != GOOGLE_CLIENT_ID:
-        print 'CLIENT ID MISMATCH'
         response = make_response(json.dumps(
             "Token's client id does not match app's"), 401)
         response.headers['Content-Type'] = 'application.json'
@@ -163,7 +159,6 @@ def gconnect():
     stored_credentials = login_session.get('credentials')
     stored_google_id = login_session.get('google_id')
     if stored_credentials is not None and google_id == stored_google_id:
-        print 'ALREADY CONNECTED'
         response = make_response(json.dumps(
             'Current user is already connected'), 200)
         response.headers['Content-Type'] = 'application.json'
@@ -192,7 +187,6 @@ def gdisconnect():
     """Log out specific to Google"""
     access_token = login_session.get('access_token')
     if access_token is None:
-        print 'Access Token is None'
         response = make_response(json.dumps(
             'Current user not connected.'), 401)
         response.headers['Content-Type'] = 'application/json'
