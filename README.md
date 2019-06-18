@@ -31,8 +31,8 @@ VirtualBox and Vagrant. Here's how to set them up.
 
 ## Set up the Database
 
-A working database with content, wines.db, is included in the project package. If you want to create a fresh database, run the models.py file in Python 2.7:
-`$ python models.py`
+A working database with content, wines.db, is included in the project package. If you want to create a fresh database, run the models.py file in Python 3:
+`$ python3 models.py`
 
 ## Add private keys for logging in
 
@@ -50,8 +50,8 @@ To log into the application you will need to provide the server with private api
 
 ## Run the program
 
-To run the program, cd to the project folder and run views.py with Python 2.7:
-`$ python views.py`
+To run the program, cd to the project folder and run views.py with Python 3:
+`$ python3 views.py`
 Navigate your browser to `localhost:5000` to view the application.
 
 Note that you will have to log in with either Google or Facebook in order to see links that will enable you to update the database, e.g. to create, edit, or delete a wine entry.
