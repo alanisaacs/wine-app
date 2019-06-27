@@ -61,7 +61,10 @@ class Wine(Base):
             }
 
 
-engine = create_engine('sqlite:///wines.db')
+# FOR RUNNING LOCALLY
+# engine = create_engine('sqlite:///wines.db')
+# FOR WSGI ON APACHE
+engine = create_engine('postgresql://catalog:catalog@localhost/wines')
 
 
 Base.metadata.create_all(engine)

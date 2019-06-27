@@ -2,6 +2,12 @@
 
 """Create web views for the Wine App"""
 
+##### FOR WSGI ON APACHE
+import sys
+import logging
+logging.basicConfig(stream=sys.stderr)
+sys.path.insert(0, "/var/www/html/")
+######
 from flask import (Flask,
                    render_template,
                    request,
@@ -26,14 +32,21 @@ import json
 import requests
 from functools import wraps
 
+# FOR RUNNING LOCALLY
+# GOOGLE_CLIENT_ID = json.loads(open(
+#    'client_secrets.json', 'r').read())['web']['client_id']
+# FOR WSGI ON APACHE
 GOOGLE_CLIENT_ID = json.loads(open(
-    'client_secrets.json', 'r').read())['web']['client_id']
+    '/var/www/html/client_secrets.json', 'r').read())['web']['client_id']
 
 app = Flask(__name__)
 
 # Connect to Database and create database session
-engine = create_engine(
-    'sqlite:///wines.db', connect_args={'check_same_thread': False})
+# FOR RUNNING LOCALLY
+# engine = create_engine(
+#     'sqlite:///wines.db', connect_args={'check_same_thread': False})
+# FOR WSGI ON APACHE
+engine = create_engine('postgresql://catalog:catalog@localhost/wines')
 Base.metadata.bind = engine
 DBSession = sessionmaker(bind=engine)
 
@@ -56,7 +69,11 @@ def fbconnect():
         response.headers['Content-Type'] = 'application/json'
         return response
     access_token = (request.data).decode()
-    app_id = json.loads(open('fb_client_secrets.json', 'r').read())[
+    # FOR RUNNING LOCALLY
+    # app_id = json.loads(open('fb_client_secrets.json', 'r').read())[
+    #     'web']['app_id']    
+    # FOR WSGI ON APACHE 
+    app_id = json.loads(open('/var/www/html/fb_client_secrets.json', 'r').read())[
         'web']['app_id']
     app_secret = json.loads(
         open('fb_client_secrets.json', 'r').read())['web']['app_secret']
@@ -417,8 +434,18 @@ def wineJSON(wine_id):
     else:
         return 'No wine with that id'
 
+# FOR RUNNING LOCALLY
+#if __name__ == '__main__':
+#    app.secret_key = 'super_secret_key'
+#    app.debug = True
+#    app.run(host='0.0.0.0', port=5000)
 
-if __name__ == '__main__':
-    app.secret_key = 'super_secret_key'
-    app.debug = True
-    app.run(host='0.0.0.0', port=5000)
+# FOR WSGI ON APACHE
+def application(environ, start_response):
+    status = '200 OK'
+    output = b'Hello'
+    response_headers = [('Content-type', 'text/plain'), ('Content-Length', str(len(output)))]
+    start_response(status, response_headers)
+    return [output]
+    # app.secret_key = 'super_secret_key'
+    # app.run()
