@@ -8,9 +8,9 @@ from sqlalchemy.orm import sessionmaker
 from models import User, Country, Wine
  
 # FOR RUNNING LOCALLY
-# engine = create_engine('sqlite:///wines.db')
+engine = create_engine('sqlite:///wines.db')
 # FOR WSGI ON APACHE
-engine = create_engine('postgresql://catalog:catalog@localhost/wines')
+#engine = create_engine('postgresql://catalog:catalog@localhost/wines')
 DBSession = sessionmaker(bind=engine)
 session = DBSession()
 
