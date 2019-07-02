@@ -3,77 +3,49 @@
 <html lang="en">
 
 <head>
-  <link href='//fonts.googleapis.com/css?family=Roboto:400,300,700' rel='stylesheet' type='text/css'>
-  <link rel="stylesheet" href="//netdna.bootstrapcdn.com/bootstrap/3.1.1/css/bootstrap.min.css">
-  <link rel=stylesheet type=text/css href="{{ url_for('static', filename='styles.css') }}">
-  <script src="//cdnjs.cloudflare.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
-
-  <script src="https://apis.google.com/js/platform.js" async defer></script>
-  
-  <meta name="google-signin-client_id"
-    content="{{ GOOGLE_CLIENT_ID }}">
+    <link rel=stylesheet type=text/css href="{{ url_for('static', filename='styles.css') }}">
+    <script src="//cdnjs.cloudflare.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+    <script src="https://apis.google.com/js/platform.js?onload=init" async defer></script>
+    
+    <!--GOOGLE SIGN IN SCRIPTS-->
+    <script>
+        function init() {
+            gapi.load('auth2', function () {
+                auth2 = gapi.auth2.init({
+                    client_id: "{{GOOGLE_CLIENT_ID}}"
+                });
+            });
+        }
+        function requestSignIn() {
+            auth2.grantOfflineAccess().then(signInCallback);
+        }
+        function signInCallback(resp){
+            //var user = auth2.currentUser.get();
+            //var profile = user.getBasicProfile();
+            //console.log("USER EMAIL: " + profile.getEmail());
+            var auth_code = resp.code;
+                $.ajax({
+                    type: "POST",
+                    url: "{{url_for('gconnect')}}?state={{state}}",
+                    processData: false,
+                    contentType: 'application/octet-stream; charset=utf-8',
+                    data: auth_code,
+                    success: function (result) {
+                        $("body").html(result);
+                        setTimeout(function () { window.location.href = '/' }, 2000);
+                    }
+                });    
+        }
+    </script>  
 </head>
 
 <body>
-  <div class="container">
-
-
-    <!-- start Google Start Login -->
-    <p>Sign in with your Google Account</p>
-
-    <script>
-      function onSuccess(googleUser) {
-        console.log('Signed in as: ' + googleUser.getBasicProfile().getName());
-        offlineAccess(googleUser);
-      }
-    </script>
-    <div class="g-signin2" data-onsuccess="onSuccess"></div>
-    <script src="https://apis.google.com/js/platform.js" async defer></script>
-    
-    <script>
-      
-      function init() {
-        gapi.load('auth2', function () {
-          console.log("IN INIT")
-          gapi.signin2.render('gbutton', {
-            scope: 'email',
-            onsuccess: offlineAccess
-          });
-
-        });
-      }
-      function offlineAccess(googleUser) {
-        console.log("IN OFFLINEACCESS")
-        var profile = googleUser.getBasicProfile();
-        console.log("ID: " + profile.getId()); // Don't send this directly to your server!
-        console.log('Full Name: ' + profile.getName());
-        console.log('Given Name: ' + profile.getGivenName());
-        console.log('Family Name: ' + profile.getFamilyName());
-        console.log("Image URL: " + profile.getImageUrl());
-        console.log("Email: " + profile.getEmail());
-
-        // request offline access
-        gapi.auth2.getAuthInstance().grantOfflineAccess({ "prompt": "consent" }).then(function (resp) {
-          var auth_code = resp.code;
-          console.log(resp);
-          console.log("ABOUT TO AJAX");
-          $.ajax({
-            type: "POST",
-            url: "{{url_for('gconnect')}}?state={{state}}",
-            processData: false,
-            contentType: 'application/octet-stream; charset=utf-8',
-            data: auth_code,
-            success: function (result) {
-              $("body").html(result);
-              setTimeout(function () { window.location.href = '/' }, 2000);
-
-            }
-          });
-        });
-      }
-    </script>
-
-    <!-- Google End Login -->
+    <div class="container">
+        <!-- GOOGLE SIGN IN -->
+        <p>Sign in with your Google Account</p>
+        <button id="signinButton" onclick="requestSignIn();return false;" 
+            style='padding:0; border:none; background: none;'>
+            <img src='static/btn_google_signin_dark_normal_web.png'></button>
 
 
 <!--FACEBOOK SIGN IN -->

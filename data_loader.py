@@ -107,10 +107,10 @@ wine5 = Wine(
     country = country3,
     description = "Jancis Robinson: Big and bold and chewy finish. Very graceful. Not a bruiser. Quite elegant. More intense than the 1991.", 
     id = 5, 
-    name = "Bois-Malot, Bordeaux Sup\u00e9rieur", 
-    price = "29.99", 
-    rating = 90, 
-    year = 2017,
+    name = "Opus One Napa Valley Bordeaux Blend", 
+    price = "359.99", 
+    rating = 94, 
+    year = 1994,
     user_id = 1,
     user = user1
     )
