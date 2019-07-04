@@ -19,12 +19,15 @@ Configurations:
 * Authenciation is key-based only
 * Local timezone is UTC
 * Python is hosted via mod_wsgi
+* Root login is disabled
 
 Third-party resources used:
 * mod_wsgi
 * flask
 * sqlalchemy
 * oauth2client
+* httplib2
+* requests
 
 ## Repository Contents
 
